@@ -19,36 +19,49 @@ def timeout(sock, user, secs):
     secs = cfg.DEFAULT_TIMEOUT
   chat(sock, ".timeout {} {}\r\n".format(user, secs))
 
-def run_command(username, message):
+import inspect
+def run_command(user, message):
   line = re.findall(r"\w+", message)
   c = line[0]
-  line.insert(1, username)
-  # try to call command function, if doesn't exist return 'Invalid command'
+  line.insert(1, user)
+  params = line[1:]
   try:
     func = getattr(commands, c)
-  except AttributeError as e:
-    return "Invalid command"
+    if not callable(func):
+      raise TypeError
+  except (AttributeError, TypeError):
+    return 'Invalid command. Type "!commands" for a list of commands.'
   else:
     sig = signature(func)
-    num_args = len(sig.parameters)
-
-    print(sig)
-
-    # get additional parameters, if not enough given, return command suggestion
+    required_params = []
+    optional_params = []
+    for key, value in sig.parameters.items():
+      if value.default is inspect.Parameter.empty:
+        required_params.append(key)
+      else:
+        optional_params.append(key)
+  
     args = ()
     try:
-      for i in range(num_args):
-        args += (line[i+1],)
-    except IndexError as e:
-      print("Error: " + str(e))
+      for p in range(len(required_params)):
+        args += (params[p],)
+    except:
+      # missing required params
       params = " "
-      for param in sig.parameters:
+      for param in list(sig.parameters)[1:]:
         params += "<" + param + "> "
       return 'Invalid command, try !' + c + params
     else:
-      # call function with arguments
-      return func(*args)
+      del params[:len(required_params)]
+  
+    try:
+      for p in range(len(optional_params)):
+        args += (params[p],)
+    except:
+      # missing optional params, ok
+      pass
 
+    return func(*args)
 
 #############################################################################################################
 
@@ -101,5 +114,5 @@ try:
     time.sleep(1 / cfg.RATE)
   
 except KeyboardInterrupt as e:
-  print("Bot disconnected!")
+  print("\nBot disconnected!")
   chat(s, "Bot disconnected!")
