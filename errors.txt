@@ -1,0 +1,19 @@
+:jtv MODE #shroud +o just9n
+:jtv MODE #shroud +o spangler_
+:jtv MODE #shroud +o streamelements
+:jtv MODE #shroud +o kurib
+:jtv MODE #shroud +o glowstik
+:jtv MODE #shroud +o shroud
+:jtv MODE #shroud +o v_ness
+:jtv MODE #shroud +o xkeemy
+:jtv MODE #shroud +o lenny
+:jtv MODE #shroud +o hunney
+:jtv MODE #shroud +o nosties
+:jtv MODE #shroud +o seductivebanana
+:jtv MODE #shroud +o lyndsey104
+:jtv MODE #shroud +o lurn
+:jtv MODE #shroud +o papashroud
+:jtv MODE #shroud +o dacchei
+:jtv MODE #shroud +o buzzatv
+@badges=subscriber/0,premium/1;color=#008000;display-name=dabberoonii;emotes=;id=f320f14d-e505-4525-bcb2-f53907474f43;mod=0;room-id=37402112;subscriber=1;tmi-sent-ts=1528591643117;turbo=0;user-id=139554727;user-type= :dabberoonii!dabberoonii@dabberoonii.tmi.twitch.tv PRIVMSG #shroud :i tried for so long for bloodfang shoulders and never got them
+@badges=subscriber/3,premium/1;color=#000000;display-name=Sharktooth6537;emotes=;id=5c37e36d-d7af-4eca-8987-806606945225;mod=0;room-id=37402112;subscribeunsupported operand type(s) for +: 'NoneType' and 'str'

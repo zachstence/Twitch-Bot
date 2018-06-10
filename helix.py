@@ -29,11 +29,8 @@ def get_follow_age(user, channel):
     follow_date = follow_info['data'][0]['followed_at']
   
     ft = datetime.strptime(follow_date, '%Y-%m-%dT%H:%M:%SZ')
-    print(ft)
     now = datetime.now()
-    print(now)
     duration = now - ft
-    print(duration)
   
     regex = re.search(r'(\d+) days, (\d+):(\d+):([\d+.])', str(duration))
     days = regex.group(1)
