@@ -1,0 +1,2 @@
+@badges=broadcaster/1,premium/1;color=#66F2FF;display-name=zach_08;emotes=;id=b0152021-bc2d-4956-8bac-3e13f610203a;mod=0;room-id=85152015;subscriber=0;tmi-sent-ts=1529427815769;turbo=0;user-id=85152015;user-type= :zach_08!zach_08@zach_08.tmi.twitch.tv PRIVMSG #zach_08 :!commands
+name 'self' is not defined
