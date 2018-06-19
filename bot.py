@@ -48,7 +48,6 @@ try:
           'HOSTTARGET'      : process_response.HOSTTARGET,
           'NOTICE'          : process_response.NOTICE,
           'RECONNECT'       : process_response.RECONNECT
-
         }
 
         # call appropriate function to process response

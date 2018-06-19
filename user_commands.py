@@ -7,7 +7,7 @@ import cfg
 
 
 
-################################## REGULAR FUNCTIONS ######################################
+################################## REGULAR COMMANDS ######################################
 import sys
 import inspect
 import types
@@ -30,7 +30,13 @@ def random(user, min, max):
   return randint(int(min), int(max))
 
 
-####################################### API FUNCTIONS #####################################
+# import requests
+# def strawpoll(user, title, option1, option2, more_options=None):
+
+  
+
+
+####################################### API COMMANDS #####################################
 import helix
 
 def followage(user, channel=cfg.CHAN):
@@ -39,17 +45,18 @@ def followage(user, channel=cfg.CHAN):
 def followcount(user, channel=cfg.CHAN):
   return helix.get_num_followers(channel)
 
-
-
-
-
-def subcount(user, channel):
-  return "ERROR: not implemented yet"
-
-def uptime(user, channel):
-  return "ERROR: not implemented yet"
-
 from datetime import datetime
-def localtime(user, channel):
+def localtime(user):
   now = datetime.now()
   return now.strftime("%I:%M %p")
+
+
+
+
+
+
+def subcount(user, channel=cfg.CHAN):
+  return "Subcount is not available on this channel"
+
+def uptime(user, channel=cfg.CHAN):
+  return "Uptime has not been implemented yet"

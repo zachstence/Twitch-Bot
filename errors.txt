@@ -1,19 +1,5 @@
-:jtv MODE #shroud +o just9n
-:jtv MODE #shroud +o spangler_
-:jtv MODE #shroud +o streamelements
-:jtv MODE #shroud +o kurib
-:jtv MODE #shroud +o glowstik
-:jtv MODE #shroud +o shroud
-:jtv MODE #shroud +o v_ness
-:jtv MODE #shroud +o xkeemy
-:jtv MODE #shroud +o lenny
-:jtv MODE #shroud +o hunney
-:jtv MODE #shroud +o nosties
-:jtv MODE #shroud +o seductivebanana
-:jtv MODE #shroud +o lyndsey104
-:jtv MODE #shroud +o lurn
-:jtv MODE #shroud +o papashroud
-:jtv MODE #shroud +o dacchei
-:jtv MODE #shroud +o buzzatv
-@badges=subscriber/0,premium/1;color=#008000;display-name=dabberoonii;emotes=;id=f320f14d-e505-4525-bcb2-f53907474f43;mod=0;room-id=37402112;subscriber=1;tmi-sent-ts=1528591643117;turbo=0;user-id=139554727;user-type= :dabberoonii!dabberoonii@dabberoonii.tmi.twitch.tv PRIVMSG #shroud :i tried for so long for bloodfang shoulders and never got them
-@badges=subscriber/3,premium/1;color=#000000;display-name=Sharktooth6537;emotes=;id=5c37e36d-d7af-4eca-8987-806606945225;mod=0;room-id=37402112;subscribeunsupported operand type(s) for +: 'NoneType' and 'str'
+tmi.twitch.tv PRIVMSG #giantwaffle :your camera is very high quality .
+@badges=premium/1;color=;display-name=robPN;emotes=;id=a29eb487-9206-4d06-b445-819e46814095;mod=0;room-id=22552479;subscriber=0;tmi-sent-ts=1529370114745;turbo=0;user-id=194273710;user-type= :robpn!robpn@robpn.tmi.twitch.tv PRIVMSG #giantwaffle :i wanna start playing but idk if it's a good enough setup
+@badges=premium/1;color=#FF0000;display-name=chronicheadband;emotes=425618:26-28;id=d5a77255-16b8-469f-97d1-3a7fa8478c71;mod=0;room-id=22552479;subscriber=0;tmi-sent-ts=1529370118289;turbo=0;user-id=106361342;user-type= :chronicheadband!chronicheadband@chronicheadband.tmi.twitch.tv PRIVMSG #giantwaffle :o changing your story now LUL
+@badges=subscriber/3,bits/100;color=#66F2FF;display-name=zach_08;emote-sets=0,84,19194,197870,865631;mod=0;subscriber=1;user-type= :tmi.twitch.tv USERSTATE #giantwaffle
+unsupported operand type(s) for +: 'NoneType' and 'str'

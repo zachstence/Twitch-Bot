@@ -4,7 +4,24 @@ import user_commands
 from inspect import signature
 from inspect import Parameter
 
+# TYPES = {
+#   'JOIN'            : process_response.JOIN,
+#   'PART'            : process_response.PART,
 
+#   'CLEARCHAT'       : process_response.CLEARCHAT,
+#   'GLOBALUSERSTATE' : process_response.GLOBALUSERSTATE,
+#   'PRIVMSG'         : process_response.PRIVMSG,
+#   'ROOMSTATE'       : process_response.ROOMSTATE,
+#   'USERNOTICE'      : process_response.USERNOTICE,
+#   'USERSTATE'       : process_response.USERSTATE,
+
+#   'HOSTTARGET'      : process_response.HOSTTARGET,
+#   'NOTICE'          : process_response.NOTICE,
+#   'RECONNECT'       : process_response.RECONNECT
+# }
+
+
+WAFFLE_SUB_MESSAGE = 'waffleH'
 
 ###################################### MEMBERSHIP ######################################
 def JOIN(socket, response):
@@ -33,16 +50,16 @@ def PRIVMSG(socket, response):
   
     print(username + ": " + message)
   
-    for pattern in cfg.BANNED:
-      if re.match(pattern, message):
-        ban(socket, username)
-        break
-    for pattern, duration in cfg.TIMEOUT.items():
-      if re.match(pattern, message):
-        timeout(socket, username, duration)
-        break
-    if message[0] == "!":
-      chat(socket, run_command(username, message))
+    # for pattern in cfg.BANNED:
+    #   if re.match(pattern, message):
+    #     ban(socket, username)
+    #     break
+    # for pattern, duration in cfg.TIMEOUT.items():
+    #   if re.match(pattern, message):
+    #     timeout(socket, username, duration)
+    #     break
+    # if message[0] == "!":
+    #   chat(socket, run_command(username, message))
   except Exception as e:
     print(e)
     print("ERROR PARSING PRIVMSG")
@@ -59,7 +76,10 @@ def USERNOTICE(socket, response):
   if notice_type in ['sub', 'resub']:
     username = get_field(response, 'login')
     months = get_field(response, 'msg-param-months')
-    print(username + " subscribed for " + months + " months")
+
+    print('*** ' + username + ' subscribed for ' + months + ' months ***')
+    chat(socket, '@' + username + ' ' + WAFFLE_SUB_MESSAGE)
+
   elif notice_type == 'subgift':
     username = get_field(response, 'login')
     recipient = get_field(response, 'msg-param-recipient-display-name')
