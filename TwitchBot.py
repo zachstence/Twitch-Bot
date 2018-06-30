@@ -99,7 +99,7 @@ class TwitchBot:
     commands = dict((name, func) for name, func in commands)
     try:
       func = commands[c]
-      return func(user, channel, *tuple(params))
+      return func(user, channel, *tuple(args))
     except KeyError as ke:
       return '{} is not a valid command'.format(ke)
     except TypeError as te:
