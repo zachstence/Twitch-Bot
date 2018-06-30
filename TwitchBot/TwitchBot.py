@@ -24,6 +24,7 @@ class TwitchBot:
     self._timeout = timeout
 
 
+  ### CONNECT AND LOOP
   def connect(self):
     self._socket = socket.socket()
     self._socket.connect((self._host, self._port))
@@ -47,7 +48,7 @@ class TwitchBot:
 
       # Async command line chat if enabled
       if self._cl_chat:
-        self._pool.apply_async(self.commandline_chat)
+        self._pool.apply_async(self.__commandline_chat)
 
       if response == "PING :tmi.twitch.tv\r\n":
         self._socket.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
@@ -59,6 +60,8 @@ class TwitchBot:
           func = getattr(self, '_TwitchBot__' + response_type)(response)
 
       time.sleep(self._rate)
+
+
 
   ########## RESPONSE PROCESSING ##########
   # OTHER FUNCTIONS #
@@ -130,7 +133,7 @@ class TwitchBot:
       return func(*args)
 
   def __commandline_chat(self):
-    self.chat(input())
+    self.__chat(input())
 
   def __chat(self, msg):
     s = "PRIVMSG #{} :{}\r\n".format(self._channel, msg)
@@ -230,6 +233,8 @@ class TwitchBot:
 
 
 
+
+
 #############################################################################################
 
 
@@ -239,6 +244,6 @@ channel = sys.argv[2]
 with open('oauths.json') as f:
   oauths = json.load(f)
 
-tb = TwitchBot(user, oauths[user], channel)
+tb = TwitchBot(user, oauths[user], channel, cl_chat=True)
 tb.connect()
 tb.loop()
