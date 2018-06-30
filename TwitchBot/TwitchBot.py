@@ -4,8 +4,10 @@ import socket
 import json
 import re
 from multiprocessing.pool import ThreadPool
-from inspect import signature
-from inspect import Parameter
+from inspect import signature, Parameter, getmembers, isfunction
+
+from random import randint
+from datetime import datetime
 
 import user_commands
 
@@ -13,6 +15,7 @@ class TwitchBot:
   _host = 'irc.twitch.tv'
   _port = 6667
   _rate = float(20)/30
+  
 
   def __init__(self, bot_username, oauth, channel, verbose=0, cl_chat=0, timeout=600):
     self._bot_username = bot_username
@@ -57,10 +60,9 @@ class TwitchBot:
         m = re.search(r"tmi\.twitch\.tv (\w+) #", response)
         if m != None:
           response_type = m.group(1)
-          func = getattr(self, '_TwitchBot__' + response_type)(response)
+          getattr(self, '_TwitchBot__' + response_type)(response)
 
       time.sleep(self._rate)
-
 
 
   ########## RESPONSE PROCESSING ##########
@@ -78,7 +80,6 @@ class TwitchBot:
           return m.group(3)
       else:
         return None
-
     else:
       regex = re.escape(field) + r"=(.*?);"
       m = re.search(regex, response)
@@ -92,45 +93,17 @@ class TwitchBot:
   def __run_command(user, message):
     line = re.findall(r"\w+", message)
     c = line[0]
-    line.insert(1, user)
-    params = line[1:]
-    try:
-      func = getattr(user_commands, c)
-      if not callable(func):
-        raise TypeError
-    except (AttributeError, TypeError):
-      return 'Invalid command. Type "!commands" for a list of commands.'
-    else:
-      sig = signature(func)
-      required_params = []
-      optional_params = []
-      for key, value in sig.parameters.items():
-        if value.default is Parameter.empty:
-          required_params.append(key)
-        else:
-          optional_params.append(key)
-    
-      args = ()
-      try:
-        for p in range(len(required_params)):
-          args += (params[p],)
-      except:
-        # missing required params
-        params = " "
-        for param in list(sig.parameters)[1:]:
-          params += "<" + param + "> "
-        return 'Invalid command, try !' + c + params
-      else:
-        del params[:len(required_params)]
-    
-      try:
-        for p in range(len(optional_params)):
-          args += (params[p],)
-      except:
-        # missing optional params, ok
-        pass
+    args = line[1:]
 
-      return func(*args)
+    commands = getmembers(user_commands, predicate=isfunction)
+    commands = dict((name, func) for name, func in commands)
+    try:
+      func = commands[c]
+      return func(user, channel, *tuple(params))
+    except KeyError as ke:
+      return '{} is not a valid command'.format(ke)
+    except TypeError as te:
+      return 'Invalid parameters for command {}'.format(func.__name__)
 
   def __commandline_chat(self):
     self.__chat(input())
@@ -146,12 +119,10 @@ class TwitchBot:
     self.__chat(".timeout {} {}\r\n".format(user, self._timeout))
 
 
-
   # MEMBERSHIP #
   def __JOIN(self, response):
     # chat(socket, "Bot connected!")
     print("Bot connected!")
-
 
   def __PART(self, response):
     # chat(socket, "Bot disconnected!")
@@ -162,10 +133,8 @@ class TwitchBot:
   def __CLEARCHAT(self, response):
     print('CLEARCHAT')
 
-
   def __GLOBALUSERSTATE(self, response):
     print('GLOBALUSERSTATE')
-
 
   def __PRIVMSG(self, response):
     try:
@@ -175,29 +144,19 @@ class TwitchBot:
     
       print(username + ": " + message)
     
-      # for pattern in cfg.BANNED:
-      #   if re.match(pattern, message):
-      #     ban(socket, username)
-      #     break
-      # for pattern, duration in cfg.TIMEOUT.items():
-      #   if re.match(pattern, message):
-      #     timeout(socket, username, duration)
-      #     break
       if message[0] == "!":
         self.__chat(TwitchBot.__run_command(username, message))
 
     except Exception as e:
       raise
-    #   print(e)
-    #   print("ERROR PARSING PRIVMSG")
-    #   with open('errors.txt', 'w') as f:
-    #     f.write(response)
-    #     f.write(str(e) + '\n')
-  
+      print(e)
+      print("ERROR PARSING PRIVMSG")
+      with open('errors.txt', 'a+') as f:
+        f.write(response)
+        f.write(str(e) + '\n')
 
   def __ROOMSTATE(self, response):
     print('ROOMSTATE')
-
 
   def __USERNOTICE(self, response):
     notice_type = TwitchBot.__get_field(response, 'msg-id')
@@ -211,7 +170,6 @@ class TwitchBot:
       recipient = TwitchBot.__get_field(response, 'msg-param-recipient-display-name')
       print('*** ' + username + ' gifted a sub to ' + recipient + ' ***')
 
-
   def __USERSTATE(self, response):
     print('USERSTATE')
 
@@ -220,17 +178,11 @@ class TwitchBot:
   def __HOSTTARGET(self, response):
     print('HOSTTARGET')
 
-
   def __NOTICE(self, response):
     print('NOTICE')
 
-
   def __RECONNECT(self, response):
     print('RECONNECT')
-
-
-
-
 
 
 
