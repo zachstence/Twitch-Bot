@@ -14,16 +14,29 @@ import user_commands
 class TwitchBot:
   _host = 'irc.twitch.tv'
   _port = 6667
-  _rate = float(20)/30
+
   
 
-  def __init__(self, bot_username, oauth, channel, verbose=0, cl_chat=0, timeout=600):
+  def __init__(self, bot_username, oauth, channel, rate=20/30, banned_words=[], timeout_words=[], verbose=2, cl_chat=0, timeout=600):
     self._bot_username = bot_username
     self._oauth = oauth
     self._channel = channel
+    self._rate = rate
 
+    self._banned_words = banned_words
+    self._timeout_words = timeout_words
+
+    # verbose 0 = no output
+    # verbose 1 = print notices (subs, raids, hosts, etc)
+    # verbose 2 = additionally print all chat messages
+    # verbose 3 = additionally print raw server response
     self._verbose = verbose
+
+    # cl_chat 0 = not able to chat from command line
+    # cl_chat 1 = able to chat form command line
     self._cl_chat = cl_chat
+
+    # timeout = default length for a timeout in seconds
     self._timeout = timeout
 
 
@@ -43,10 +56,11 @@ class TwitchBot:
 
   def loop(self):
     while True:
+      command_sent = False
       response = self._socket.recv(1024).decode("utf-8")
 
       # Output verbose if response enabled
-      if self._verbose >= 2:
+      if self._verbose >= 3:
         print(response)
 
       # Async command line chat if enabled
@@ -60,9 +74,10 @@ class TwitchBot:
         m = re.search(r"tmi\.twitch\.tv (\w+) #", response)
         if m != None:
           response_type = m.group(1)
-          getattr(self, '_TwitchBot__' + response_type)(response)
+          command_sent = getattr(self, '_TwitchBot__' + response_type)(response)
 
-      time.sleep(self._rate)
+      if command_sent:
+        time.sleep(self._rate)
 
 
   ########## RESPONSE PROCESSING ##########
@@ -150,10 +165,21 @@ class TwitchBot:
       channel = TwitchBot.__get_field(response, 'channel')
       message = TwitchBot.__get_field(response, 'message')
     
-      print(username + ": " + message)
+      if self._verbose >= 2:
+        print(username + ": " + message)
     
+      for bw in self._banned_words:
+        if re.match(bw, message):
+          self.__ban(username)
+          return True
+      for tw in self._timeout_words:
+        if re.match(tw, message):
+          self.__timeout(username)
+          return True
+
       if message[0] == "!":
         self.__chat(TwitchBot.__run_command(username, channel, message))
+        return True
 
     except Exception as e:
       raise
@@ -204,6 +230,6 @@ channel = sys.argv[2]
 with open('oauths.json') as f:
   oauths = json.load(f)
 
-tb = TwitchBot(user, oauths[user], channel, cl_chat=True)
+tb = TwitchBot(user, oauths[user], channel, cl_chat=True, banned_words=['ban'], timeout_words=['timeout'])
 tb.connect()
 tb.loop()
