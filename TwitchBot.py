@@ -103,7 +103,7 @@ class TwitchBot:
     except KeyError as ke:
       return '{} is not a valid command'.format(ke)
     except TypeError as te:
-      return 'Invalid parameters for command {}'.format(func.__name__)
+      return te
 
   def __commandline_chat(self):
     self.__chat(input())
