@@ -99,7 +99,6 @@ class TwitchBot:
     # check for custom channel commands first
     with open(channel + '_commands.json', 'r') as f:
       channel_commands = json.load(f)
-      print(channel_commands)
     if c in channel_commands.keys():
       return channel_commands[c]
 

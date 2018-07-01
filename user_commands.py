@@ -40,36 +40,48 @@ def localtime(chatter, channel):
   now = datetime.now()
   return now.strftime("%I:%M %p")
 
-
+# add custom command or overwrite if it already exists
 def addcustom(chatter, channel, *args):
-  name = args[0]
-  out = " ".join(args[1:])
+  try:
+    name = args[0]
+    out = " ".join(args[1:])
+    
+    # check to see if its a bot command already
+    funcs = inspect.getmembers(sys.modules[__name__], predicate=inspect.isfunction)
+    funcs = [f[0] for f in funcs]
+    if name in funcs:
+      return 'Command \'!{}\' already exists'.format(name)
   
-  with open(channel + '_commands.json', 'r') as f:
-    channel_commands = json.load(f)
+    with open(channel + '_commands.json', 'r') as f:
+      channel_commands = json.load(f)
+    
+    channel_commands[name] = out
+    s = json.dumps(channel_commands, indent=2)
+    
+    with open(channel + '_commands.json', 'w') as f:
+      f.write(s)
   
-  channel_commands[name] = out
-  s = json.dumps(channel_commands, indent=2)
-  
-  with open(channel + '_commands.json', 'w') as f:
-    f.write(s)
-
-  return 'Added \'!{}\' : \'{}\''.format(name, out)
+    return 'Added \'!{}\' : \'{}\''.format(name, out)
+  except IndexError:
+    return 'Specify a custom command and its description: !addcustom <name> <description>'
 
 
 def removecustom(chatter, channel, *args):
-  name = args[0]
-  with open(channel + '_commands.json', 'r') as f:
-    channel_commands = json.load(f)
-  
-  if name in channel_commands.keys():
-    del channel_commands[name]
-    s = json.dumps(channel_commands, indent=2)
-    with open(channel + '_commands.json', 'w') as f:
-      f.write(s)
-    return '\'!{}\' command removed'.format(name)
-  else:
-    return '\'!{}\' is not a command'.format(name)
+  try:
+    name = args[0]
+    with open(channel + '_commands.json', 'r') as f:
+      channel_commands = json.load(f)
+    
+    if name in channel_commands.keys():
+      del channel_commands[name]
+      s = json.dumps(channel_commands, indent=2)
+      with open(channel + '_commands.json', 'w') as f:
+        f.write(s)
+      return '\'!{}\' command removed'.format(name)
+    else:
+      return '\'!{}\' is not a command'.format(name)
+  except IndexError:
+    return 'Specify a custom command to remove: !removecustom <name>'
 
 ####################################### API COMMANDS #####################################
 def followage(chatter, channel, *args):
@@ -105,11 +117,3 @@ def subcount(chatter, channel):
 
 def uptime(chatter, channel):
   return "Uptime has not been implemented yet"
-
-
-
-####################################### DYNAMICALLY ADDED COMMANDS #####################################
-def modpack(chatter, channel):
-  return 'test'
-def modpack(chatter, channel):
-  return 'sevtech'
