@@ -1,6 +1,7 @@
 import sys
 import inspect
 import types
+import json
 from datetime import datetime
 from random import randint
 
@@ -15,12 +16,18 @@ import helix
 
 ################################## REGULAR COMMANDS ######################################
 def commands(chatter, channel):
+  with open(channel + '_commands.json', 'r') as f:
+    channel_commands = json.load(f)
+  commands = list(channel_commands.keys())
+
   funcs = inspect.getmembers(sys.modules[__name__], predicate=inspect.isfunction)
-  funcs = [f[0] for f in funcs]
-  s = "Commands: !" + funcs[0]
-  for f in funcs[1:]:
+  commands += [f[0] for f in funcs]
+  
+  s = "Commands: !" + commands[0]
+  for f in commands[1:]:
     s += ", !" + f
   return s
+
 
 def random(chatter, channel, *args):
   if len(args) >= 2:
@@ -28,18 +35,41 @@ def random(chatter, channel, *args):
   else:
     raise TypeError('Missing arguments, try \'!random <min> <max>\'')
 
+
 def localtime(chatter, channel):
   now = datetime.now()
   return now.strftime("%I:%M %p")
 
-def newcommand(chatter, channel, *args):
-  ret = " ".join(list(args)[1:])
-  def new(chatter, channel):
-    return ret
-  setattr(sys.modules[__name__], args[0], new)
-  return 'New command \'!{}\' returns \'{}\''.format(args[0], ret)
+
+def addcustom(chatter, channel, *args):
+  name = args[0]
+  out = " ".join(args[1:])
+  
+  with open(channel + '_commands.json', 'r') as f:
+    channel_commands = json.load(f)
+  
+  channel_commands[name] = out
+  s = json.dumps(channel_commands, indent=2)
+  
+  with open(channel + '_commands.json', 'w') as f:
+    f.write(s)
+
+  return 'Added \'!{}\' : \'{}\''.format(name, out)
 
 
+def removecustom(chatter, channel, *args):
+  name = args[0]
+  with open(channel + '_commands.json', 'r') as f:
+    channel_commands = json.load(f)
+  
+  if name in channel_commands.keys():
+    del channel_commands[name]
+    s = json.dumps(channel_commands, indent=2)
+    with open(channel + '_commands.json', 'w') as f:
+      f.write(s)
+    return '\'!{}\' command removed'.format(name)
+  else:
+    return '\'!{}\' is not a command'.format(name)
 
 ####################################### API COMMANDS #####################################
 def followage(chatter, channel, *args):
@@ -75,3 +105,11 @@ def subcount(chatter, channel):
 
 def uptime(chatter, channel):
   return "Uptime has not been implemented yet"
+
+
+
+####################################### DYNAMICALLY ADDED COMMANDS #####################################
+def modpack(chatter, channel):
+  return 'test'
+def modpack(chatter, channel):
+  return 'sevtech'

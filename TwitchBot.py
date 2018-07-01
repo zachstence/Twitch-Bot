@@ -90,11 +90,20 @@ class TwitchBot:
         return None
 
   @staticmethod
-  def __run_command(user, message):
+  def __run_command(user, channel, message):
+    
     line = re.findall(r"\w+", message)
     c = line[0]
     args = line[1:]
 
+    # check for custom channel commands first
+    with open(channel + '_commands.json', 'r') as f:
+      channel_commands = json.load(f)
+      print(channel_commands)
+    if c in channel_commands.keys():
+      return channel_commands[c]
+
+    # then check for bot commands
     commands = getmembers(user_commands, predicate=isfunction)
     commands = dict((name, func) for name, func in commands)
     try:
@@ -139,13 +148,13 @@ class TwitchBot:
   def __PRIVMSG(self, response):
     try:
       username = TwitchBot.__get_field(response, 'username')
-      # channel = TwitchBot.__get_field(response, 'channel')
+      channel = TwitchBot.__get_field(response, 'channel')
       message = TwitchBot.__get_field(response, 'message')
     
       print(username + ": " + message)
     
       if message[0] == "!":
-        self.__chat(TwitchBot.__run_command(username, message))
+        self.__chat(TwitchBot.__run_command(username, channel, message))
 
     except Exception as e:
       raise
