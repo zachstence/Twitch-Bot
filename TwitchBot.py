@@ -31,7 +31,7 @@ class TwitchBot:
     self._public_response = public_response
 
     # verbose 0 = no output
-    # verbose 1 = print notices (subs, raids, hosts, etc)
+    # verbose 1 = print server response types
     # verbose 2 = additionally print all chat messages
     # verbose 3 = additionally print raw server response
     self._verbose = verbose
@@ -48,12 +48,12 @@ class TwitchBot:
   def connect(self):
     self._socket = socket.socket()
     self._socket.connect((self._host, self._port))
-    self._socket.send("CAP REQ :twitch.tv/membership\r\n".encode('utf-8'))
-    self._socket.send("CAP REQ :twitch.tv/tags\r\n".encode('utf-8'))
-    self._socket.send("CAP REQ :twitch.tv/commands\r\n".encode('utf-8'))
-    self._socket.send("PASS {}\r\n".format(self._oauth).encode("utf-8"))
-    self._socket.send("NICK {}\r\n".format(self._bot_username).encode("utf-8"))
-    self._socket.send("JOIN #{}\r\n".format(self._channel).encode("utf-8")) 
+    self._socket.send('CAP REQ :twitch.tv/membership\r\n'.encode('utf-8'))
+    self._socket.send('CAP REQ :twitch.tv/tags\r\n'.encode('utf-8'))
+    self._socket.send('CAP REQ :twitch.tv/commands\r\n'.encode('utf-8'))
+    self._socket.send('PASS {}\r\n'.format(self._oauth).encode('utf-8'))
+    self._socket.send('NICK {}\r\n'.format(self._bot_username).encode('utf-8'))
+    self._socket.send('JOIN #{}\r\n'.format(self._channel).encode('utf-8'))
 
     if self._cl_chat:
       self._pool = ThreadPool(processes=1)
@@ -61,26 +61,25 @@ class TwitchBot:
   def loop(self):
     command_sent = False
     while True:
-      response = self._socket.recv(1024).decode("utf-8")
+      response = self._socket.recv(1024).decode('utf-8')
 
       # output verbose if response enabled
       if self._verbose >= 3:
-        print(response)
+        print(response, end='')
 
       # async command line chat if enabled
       if self._cl_chat:
         self._pool.apply_async(self.__commandline_chat)
 
-      # if PING, send PONG
-      if response == "PING :tmi.twitch.tv\r\n":
-        self._socket.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
-      
-      # otherwise process message
-      else:
-        m = re.search(r"tmi\.twitch\.tv (\w+) #", response)
-        if m != None:
-          response_type = m.group(1)
-          command_sent = getattr(self, '_TwitchBot__' + response_type)(response)
+      # process message
+      m = re.search(r'tmi\.twitch\.tv (\w+) #', response)
+      if m != None:
+        response_type = m.group(1)
+        if self._verbose >= 1:
+          print(response_type)
+        command_sent = getattr(self, '_TwitchBot__' + response_type)(response)
+        if self._verbose >= 3:
+          print()
 
       # sleep bot if command sent (don't exceed Twitch chat bot msg/min limit)
       if command_sent:
@@ -92,19 +91,19 @@ class TwitchBot:
   # OTHER FUNCTIONS #
   @staticmethod
   def __get_field(response, field):
-    if field == "username" or field == "channel" or field == "message":
-      m = re.search(r" :(.*?)!.*?@.*?\.tmi\.twitch\.tv \w+ #(.*?) :(.*)$", response)
+    if field == 'username' or field == 'channel' or field == 'message':
+      m = re.search(r' :(.*?)!.*?@.*?\.tmi\.twitch\.tv \w+ #(.*?) :(.*)$', response)
       if m != None:
-        if field == "username":
+        if field == 'username':
           return m.group(1)
-        elif field == "channel":
+        elif field == 'channel':
           return m.group(2)
-        elif field == "message":
+        elif field == 'message':
           return m.group(3)
       else:
         return None
     else:
-      regex = re.escape(field) + r"=(.*?);"
+      regex = re.escape(field) + r'=(.*?);'
       m = re.search(regex, response)
 
       if m != None:
@@ -141,35 +140,37 @@ class TwitchBot:
   def __chat(self, user, msg):
     if self._public_response:
       msg = '@{} {}'.format(user, msg)
-    s = "PRIVMSG #{} :{}\r\n".format(self._channel, msg)
+    s = 'PRIVMSG #{} :{}\r\n'.format(self._channel, msg)
     self._socket.send(s.encode('utf-8'))
 
   def __whisper(self, user, msg):
     self.__chat(user, '.w {} {}'.format(user, msg))
 
   def __ban(self, user):
-    self.__chat(".ban {}".format(user))
+    self.__chat('.ban {}'.format(user))
 
   def __timeout(self, user):
-    self.__chat(".timeout {} {}".format(user, self._timeout))
+    self.__chat('.timeout {} {}'.format(user, self._timeout))
 
+  # PONG #
+  def __PONG(self, response):
+    self._socket.send('PONG :tmi.twitch.tv\r\n'.encode('utf-8'))
+    return None
 
   # MEMBERSHIP #
   def __JOIN(self, response):
-    # chat(socket, "Bot connected!")
-    print("Bot connected!")
+    return None
 
   def __PART(self, response):
-    # chat(socket, "Bot disconnected!")
-    print("Bot disconnected!")
+    return None
 
 
   # TAGS #
   def __CLEARCHAT(self, response):
-    print('CLEARCHAT')
+    return None
 
   def __GLOBALUSERSTATE(self, response):
-    print('GLOBALUSERSTATE')
+    return None
 
   def __PRIVMSG(self, response):
     try:
@@ -179,7 +180,7 @@ class TwitchBot:
     
       if self._verbose >= 2:
         print(username + ": " + message)
-    
+
       for bw in self._banned_words:
         if re.match(bw, message):
           self.__ban(username)
@@ -189,7 +190,7 @@ class TwitchBot:
           self.__timeout(username)
           return True
 
-      if message[0] == "!":
+      if message[0] == '!':
         if self._public_response:
           self.__chat(username, TwitchBot.__run_command(username, channel, message))
         else:
@@ -199,7 +200,7 @@ class TwitchBot:
     except Exception as e:
       raise
       print(e)
-      print("ERROR PARSING PRIVMSG")
+      print('ERROR PARSING PRIVMSG')
       with open('errors.txt', 'a+') as f:
         f.write(response)
         f.write(str(e) + '\n')
@@ -219,19 +220,20 @@ class TwitchBot:
       recipient = TwitchBot.__get_field(response, 'msg-param-recipient-display-name')
       print('*** ' + username + ' gifted a sub to ' + recipient + ' ***')
 
-  def __USERSTATE(self, response):
-    print('USERSTATE')
+    return None
 
+  def __USERSTATE(self, response):
+    return None
 
   # TWITCH COMMANDS #
   def __HOSTTARGET(self, response):
-    print('HOSTTARGET')
+    return None
 
   def __NOTICE(self, response):
-    print('NOTICE')
+    return None
 
   def __RECONNECT(self, response):
-    print('RECONNECT')
+    return None
 
 
 
@@ -245,6 +247,11 @@ channel = sys.argv[2]
 with open('oauths.json') as f:
   oauths = json.load(f)
 
-tb = TwitchBot(user, oauths[user], channel, cl_chat=True, banned_words=['ban'], timeout_words=['timeout'], public_response=True)
+tb = TwitchBot(user, oauths[user], channel, 
+  cl_chat=True, 
+  banned_words=['ban'], 
+  timeout_words=['timeout'], 
+  public_response=True, 
+  verbose=10)
 tb.connect()
 tb.loop()
