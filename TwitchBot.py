@@ -17,7 +17,7 @@ class TwitchBot:
 
   
 
-  def __init__(self, bot_username, oauth, channel, rate=20/30, banned_words=[], timeout_words=[], verbose=2, cl_chat=0, timeout=600):
+  def __init__(self, bot_username, oauth, channel, rate=20/30, banned_words=[], timeout_words=[], public_response=True, verbose=2, cl_chat=0, timeout=600):
     self._bot_username = bot_username
     self._oauth = oauth
     self._channel = channel
@@ -25,6 +25,10 @@ class TwitchBot:
 
     self._banned_words = banned_words
     self._timeout_words = timeout_words
+
+    # public_response 0 = whisper bot responses
+    # public_response 1 = normal chat bot responses
+    self._public_response = public_response
 
     # verbose 0 = no output
     # verbose 1 = print notices (subs, raids, hosts, etc)
@@ -47,37 +51,41 @@ class TwitchBot:
     self._socket.send("CAP REQ :twitch.tv/membership\r\n".encode('utf-8'))
     self._socket.send("CAP REQ :twitch.tv/tags\r\n".encode('utf-8'))
     self._socket.send("CAP REQ :twitch.tv/commands\r\n".encode('utf-8'))
-
     self._socket.send("PASS {}\r\n".format(self._oauth).encode("utf-8"))
     self._socket.send("NICK {}\r\n".format(self._bot_username).encode("utf-8"))
     self._socket.send("JOIN #{}\r\n".format(self._channel).encode("utf-8")) 
 
-    self._pool = ThreadPool(processes=1)
+    if self._cl_chat:
+      self._pool = ThreadPool(processes=1)
 
   def loop(self):
+    command_sent = False
     while True:
-      command_sent = False
       response = self._socket.recv(1024).decode("utf-8")
 
-      # Output verbose if response enabled
+      # output verbose if response enabled
       if self._verbose >= 3:
         print(response)
 
-      # Async command line chat if enabled
+      # async command line chat if enabled
       if self._cl_chat:
         self._pool.apply_async(self.__commandline_chat)
 
+      # if PING, send PONG
       if response == "PING :tmi.twitch.tv\r\n":
         self._socket.send("PONG :tmi.twitch.tv\r\n".encode("utf-8"))
       
+      # otherwise process message
       else:
         m = re.search(r"tmi\.twitch\.tv (\w+) #", response)
         if m != None:
           response_type = m.group(1)
           command_sent = getattr(self, '_TwitchBot__' + response_type)(response)
 
+      # sleep bot if command sent (don't exceed Twitch chat bot msg/min limit)
       if command_sent:
         time.sleep(self._rate)
+        command_sent = False
 
 
   ########## RESPONSE PROCESSING ##########
@@ -106,7 +114,6 @@ class TwitchBot:
 
   @staticmethod
   def __run_command(user, channel, message):
-    
     line = re.findall(r"\w+", message)
     c = line[0]
     args = line[1:]
@@ -131,15 +138,20 @@ class TwitchBot:
   def __commandline_chat(self):
     self.__chat(input())
 
-  def __chat(self, msg):
+  def __chat(self, user, msg):
+    if self._public_response:
+      msg = '@{} {}'.format(user, msg)
     s = "PRIVMSG #{} :{}\r\n".format(self._channel, msg)
     self._socket.send(s.encode('utf-8'))
 
+  def __whisper(self, user, msg):
+    self.__chat(user, '.w {} {}'.format(user, msg))
+
   def __ban(self, user):
-    self.__chat(".ban {}\r\n".format(user))
+    self.__chat(".ban {}".format(user))
 
   def __timeout(self, user):
-    self.__chat(".timeout {} {}\r\n".format(user, self._timeout))
+    self.__chat(".timeout {} {}".format(user, self._timeout))
 
 
   # MEMBERSHIP #
@@ -178,7 +190,10 @@ class TwitchBot:
           return True
 
       if message[0] == "!":
-        self.__chat(TwitchBot.__run_command(username, channel, message))
+        if self._public_response:
+          self.__chat(username, TwitchBot.__run_command(username, channel, message))
+        else:
+          self.__whisper(username, TwitchBot.__run_command(username, channel, message))
         return True
 
     except Exception as e:
@@ -230,6 +245,6 @@ channel = sys.argv[2]
 with open('oauths.json') as f:
   oauths = json.load(f)
 
-tb = TwitchBot(user, oauths[user], channel, cl_chat=True, banned_words=['ban'], timeout_words=['timeout'])
+tb = TwitchBot(user, oauths[user], channel, cl_chat=True, banned_words=['ban'], timeout_words=['timeout'], public_response=True)
 tb.connect()
 tb.loop()
