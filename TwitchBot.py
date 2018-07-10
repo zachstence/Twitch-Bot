@@ -17,7 +17,7 @@ class TwitchBot:
 
   
 
-  def __init__(self, bot_username, oauth, channel, rate=20/30, banned_words=[], timeout_words=[], public_response=True, verbose=2, cl_chat=0, timeout=600):
+  def __init__(self, bot_username, oauth, channel, rate=20/30, banned_words=[], timeout_words=[], public_response=True, verbose=2, cl_chat=False, timeout=600):
     self._bot_username = bot_username
     self._oauth = oauth
     self._channel = channel
@@ -135,10 +135,10 @@ class TwitchBot:
       return te
 
   def __commandline_chat(self):
-    self.__chat(input())
+    self.__chat(None, input())
 
   def __chat(self, user, msg):
-    if self._public_response:
+    if self._public_response and user != None:
       msg = '@{} {}'.format(user, msg)
     s = 'PRIVMSG #{} :{}\r\n'.format(self._channel, msg)
     self._socket.send(s.encode('utf-8'))
